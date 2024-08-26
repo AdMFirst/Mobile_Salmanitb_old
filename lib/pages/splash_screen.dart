@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:salmanitb/pages/maintenance_page.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -32,17 +36,43 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _isNormalOperation = true;
+
   @override
   void initState() {
     super.initState();
-    // Menunggu selama 3 detik sebelum berpindah ke halaman berikutnya
-    Future.delayed(const Duration(seconds: 5), () {
-      Navigator.pushReplacementNamed(context, '/landing');
-    });
+    _checkNetworkConnection();
+  }
+
+  Future<void> _checkNetworkConnection() async {
+    const String baseUrl = String.fromEnvironment("BASE_URL", defaultValue: 'https://salimapi.admfirst.my.id');
+    
+    try {
+      var response = await http.get(
+        Uri.parse("$baseUrl/up"),
+        headers: {
+          'User-Agent': 'SalmanITB/1.0.0',
+        },
+      );
+      Future.delayed(Duration(seconds: Random.secure().nextInt(5)));
+
+      if (response.statusCode == 200){
+        Navigator.of(context).pushNamed('/landing');
+      } else {
+        throw const SocketException('Something went wrong');
+      }
+    } on SocketException catch (_) {
+      setState(() {
+        _isNormalOperation = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isNormalOperation == false ) {
+      return const NoInternetPage();
+    }
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
