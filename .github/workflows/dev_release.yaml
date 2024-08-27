@@ -30,12 +30,21 @@ jobs:
     
     # Get flutter dependencies.
     - run: flutter pub get
+
+    - name: Set Build Version
+      id: version
+      run: |
+        BUILD_NAME="1.0.1-dev-$(git rev-parse --short HEAD)"
+        BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
+        echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
+        echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
     
     # Build apk.
-    - run: flutter build apk --debug --split-per-abi
+    - run: flutter build apk --debug --split-per-abi --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_NUMBER }}
     
     # Upload generated apk to the artifacts.
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "build/app/outputs/flutter-apk/*"
         prerelease: true
+        tag: "1.0.1-dev-$(git rev-parse --short HEAD)"
